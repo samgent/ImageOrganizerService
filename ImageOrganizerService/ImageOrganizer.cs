@@ -37,20 +37,27 @@ namespace ImageOrganizerService
 
         private void _TimerElapsed(object sender, ElapsedEventArgs e)
         {
-            //Look for files in directory and if one exists, move the file to a folder corresponding to the same year as the file was created 
-            //
+            
         }
 
+        //Look for files in directory and if one exists, move the file to a folder corresponding to the same year as the file was created 
         public void ProcessDirectory(string targetDir)
         {
-            string[] fileEntries = Directory.GetFiles(targetDir);
+            string[] files = Directory.GetFiles(targetDir);
+            string[] paths;
 
-            foreach (var file in fileEntries)
+            foreach (var file in files)
             {
-                //Console.WriteLine(GetDateModified(file));
-                string year = GetDateModified(file).Year.ToString();
-                string month = GetDateModified(file).ToString("MMM");
-                string newPath = targetDir + @"\" + year + @"\" + month;
+                DateTime dateCreated = File.GetLastWriteTime(file);
+
+                paths = new string[] {
+                    targetDir,
+                    dateCreated.Year.ToString(),
+                    dateCreated.ToString("MMM")
+                };
+
+                string newPath = PathBuilder(paths);
+
                 try
                 {
                     if (!Directory.Exists(newPath))
@@ -58,12 +65,13 @@ namespace ImageOrganizerService
                         Directory.CreateDirectory(newPath);
                     }
                 }
+
                 catch (Exception e)
                 {
                     Console.WriteLine("The process failed: {0}", e.ToString());
                 }
-                MoveFile(file, newPath + @"\" + Path.GetFileName(file));
-                //ProcessImage(file);
+
+                MoveFile(file, newPath + Path.GetFileName(file));
             }
         }
 
@@ -79,9 +87,16 @@ namespace ImageOrganizerService
             File.Move(from, to);
         }
 
-        public void ProcessImage(string file)
+        public string PathBuilder(string[] paths)
         {
+            String path = "";
 
+            foreach (var item in paths)
+            {
+                path += item + @"\";
+            }
+
+            return path;
         }
 
         public void Start()
